@@ -1,0 +1,48 @@
+# CapyDash Configuration
+# This file contains all configurable settings for CapyDash
+
+# Server Configuration
+server:
+  host: "localhost"
+  port: 4000
+  websocket_path: "/websocket"
+  max_connections: 100
+  message_history_limit: 1000
+
+# Dashboard Configuration
+dashboard:
+  title: "CapyDash Test Monitor"
+  refresh_interval: 1000
+  auto_scroll: true
+  show_timestamps: true
+  screenshot_quality: 0.8
+  max_screenshot_width: 1200
+
+# Test Configuration
+tests:
+  default_directory: "test"
+  system_tests_dir: "test/system"
+  feature_tests_dir: "test/features"
+  controller_tests_dir: "test/controllers"
+  model_tests_dir: "test/models"
+  screenshot_dir: "tmp/capydash_screenshots"
+  timeout: 300 # seconds
+
+# Logging Configuration
+logging:
+  level: "info" # debug, info, warn, error
+  file: "log/capydash.log"
+  max_file_size: "10MB"
+  max_files: 5
+
+# Security Configuration
+security:
+  enable_auth: false
+  secret_key: "your-secret-key-here"
+  session_timeout: 3600 # seconds
+
+# Performance Configuration
+performance:
+  enable_compression: true
+  cleanup_interval: 300 # seconds
+  max_memory_usage: "512MB"
