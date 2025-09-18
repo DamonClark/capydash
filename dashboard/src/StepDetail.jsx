@@ -10,11 +10,11 @@ function StepDetail({ step }) {
       <p>Status: {step.status}</p>
       <p>Time: {new Date(step.timestamp).toLocaleTimeString()}</p>
 
-      {step.screenshot_url && (
+      {(step.screenshot_url || step.data_url) && (
         <div style={{ marginTop: '1rem' }}>
           <h4>Screenshot:</h4>
           <img
-            src={`file://${process.cwd()}/${step.screenshot_url}`}
+            src={step.data_url || `file://${process.cwd()}/${step.screenshot_url}`}
             alt="Step Screenshot"
             style={{ maxWidth: '100%', border: '1px solid #ccc' }}
           />

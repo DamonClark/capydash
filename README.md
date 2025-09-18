@@ -285,6 +285,56 @@ MIT License - see LICENSE file for details.
 - Documentation: [Full documentation](https://github.com/damonclark/capydash/wiki)
 - Examples: [Example configurations and usage](https://github.com/damonclark/capydash/examples)
 
+## Static HTML Reports
+
+CapyDash can generate comprehensive HTML reports similar to SimpleCov, perfect for sharing test results or archiving test runs.
+
+### Generating Reports
+
+After running your tests, generate a static HTML report:
+
+```bash
+# Generate report from latest test run
+bundle exec rake capydash:report
+
+# Generate report from specific test run
+bundle exec rake capydash:report[run_id]
+
+# Generate report to custom directory
+bundle exec rake capydash:report[run_id,custom_report_dir]
+```
+
+### Report Features
+
+- **Comprehensive Summary**: Total tests, pass/fail counts, success rate, duration
+- **Detailed Test Information**: Individual test results with timing and status
+- **Step-by-Step Breakdown**: Each Capybara step with status and details
+- **Screenshot Integration**: Screenshots are automatically included and linked
+- **Error Details**: Full error messages and stack traces for failed tests
+- **Search Functionality**: Built-in search to filter tests and steps
+- **Responsive Design**: Works on desktop and mobile devices
+
+### Managing Test Runs
+
+```bash
+# List available test runs
+bundle exec rake capydash:list_runs
+
+# Clean up old test runs (older than 30 days)
+bundle exec rake capydash:cleanup
+
+# Clean up with custom retention period
+bundle exec rake capydash:cleanup[7]  # Keep only 7 days
+```
+
+### Report Structure
+
+The generated report includes:
+- `index.html` - Main report file
+- `screenshots/` - Directory containing all test screenshots
+- Responsive CSS styling
+- JavaScript search functionality
+
 ## Publishing
 
 To build and publish this gem:

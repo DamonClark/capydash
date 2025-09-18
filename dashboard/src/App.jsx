@@ -4,6 +4,7 @@ function App() {
   const [messages, setMessages] = useState([]);
   const [isRunning, setIsRunning] = useState(false);
   const [currentTest, setCurrentTest] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const wsRef = useRef(null);
   const latestStepRef = useRef(null);
 
@@ -68,6 +69,65 @@ function App() {
       });
     }
   }, [messages, isRunning]);
+
+  // Search filtering function
+  const filterTests = (groupedTests, query) => {
+    if (!query.trim()) return groupedTests;
+
+    const searchTerm = query.toLowerCase();
+
+    return groupedTests.filter(group => {
+      // Check if test class name matches
+      if (group.testClass.toLowerCase().includes(searchTerm)) return true;
+
+      // Check if any test method matches
+      const hasMatchingMethod = group.testMethods.some(method => {
+        if (method.methodName.toLowerCase().includes(searchTerm)) return true;
+
+        // Check if any step matches
+        return method.steps.some(step => {
+          if (step.step_name?.toLowerCase().includes(searchTerm)) return true;
+          if (step.detail?.toLowerCase().includes(searchTerm)) return true;
+          if (step.status?.toLowerCase().includes(searchTerm)) return true;
+          if (step.error?.toLowerCase().includes(searchTerm)) return true;
+          return false;
+        });
+      });
+
+      return hasMatchingMethod;
+    });
+  };
+
+  // Get search statistics
+  const getSearchStats = () => {
+    if (!searchQuery.trim()) return null;
+
+    const totalTests = grouped.reduce((sum, group) => sum + group.testMethods.length, 0);
+    const filteredTests = filteredGrouped.reduce((sum, group) => sum + group.testMethods.length, 0);
+    const totalSteps = grouped.reduce((sum, group) =>
+      sum + group.testMethods.reduce((methodSum, method) => methodSum + method.steps.length, 0), 0);
+    const filteredSteps = filteredGrouped.reduce((sum, group) =>
+      sum + group.testMethods.reduce((methodSum, method) => methodSum + method.steps.length, 0), 0);
+
+    return { totalTests, filteredTests, totalSteps, filteredSteps };
+  };
+
+
+  // Highlight matching text function
+  const highlightText = (text, query) => {
+    if (!query.trim() || !text) return text;
+
+    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    const parts = text.split(regex);
+
+    return parts.map((part, index) =>
+      regex.test(part) ? (
+        <mark key={index} style={{ background: '#ffeb3b', padding: '1px 2px', borderRadius: '2px' }}>
+          {part}
+        </mark>
+      ) : part
+    );
+  };
 
   // Group by test class, then by test method, then by steps
   const grouped = useMemo(() => {
@@ -188,6 +248,11 @@ function App() {
     return result;
   }, [messages]);
 
+  // Filter grouped tests based on search query
+  const filteredGrouped = useMemo(() => {
+    return filterTests(grouped, searchQuery);
+  }, [grouped, searchQuery]);
+
   const runTestFile = (testFile) => {
     const ws = wsRef.current;
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
@@ -261,11 +326,86 @@ function App() {
           </span>
         )}
       </div>
+
+      {/* Search Box */}
+      <div style={{ marginBottom: 16, position: "relative" }}>
+        <div style={{ position: "relative" }}>
+          <input
+            type="text"
+            placeholder="Search tests by name, status (passed/failed/running), or content..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{
+              width: "100%",
+              padding: "12px 16px 12px 40px",
+              fontSize: 14,
+              border: "2px solid #e1e5e9",
+              borderRadius: 8,
+              outline: "none",
+              transition: "border-color 0.2s ease",
+              fontFamily: "Inter, system-ui, -apple-system, Segoe UI, Roboto"
+            }}
+            onFocus={(e) => e.target.style.borderColor = "#007bff"}
+            onBlur={(e) => e.target.style.borderColor = "#e1e5e9"}
+          />
+          <div style={{
+            position: "absolute",
+            left: 12,
+            top: "50%",
+            transform: "translateY(-50%)",
+            color: "#666",
+            fontSize: 16
+          }}>
+            🔍
+          </div>
+        </div>
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery("")}
+            style={{
+              position: "absolute",
+              right: 12,
+              top: "50%",
+              transform: "translateY(-50%)",
+              background: "none",
+              border: "none",
+              fontSize: 18,
+              cursor: "pointer",
+              color: "#666",
+              padding: 4
+            }}
+            title="Clear search"
+          >
+            ×
+          </button>
+        )}
+        {searchQuery && (() => {
+          const stats = getSearchStats();
+          return (
+            <div style={{ fontSize: 12, color: "#666", marginTop: 4 }}>
+              Showing {filteredGrouped.length} of {grouped.length} test groups
+              {stats && (
+                <span style={{ marginLeft: 8 }}>
+                  • {stats.filteredTests} of {stats.totalTests} tests
+                  • {stats.filteredSteps} of {stats.totalSteps} steps
+                </span>
+              )}
+            </div>
+          );
+        })()}
+        {!searchQuery && (
+          <div style={{ fontSize: 12, color: "#666", marginTop: 4 }}>
+            Search by test name, status, or content
+          </div>
+        )}
+      </div>
       <div style={{ display: "flex", gap: 24, marginTop: 16 }}>
         <div style={{ flex: 3 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
             <strong>Test Files</strong>
-            <span style={{ fontSize: 12, color: "#666" }}>{grouped.length} files</span>
+            <span style={{ fontSize: 12, color: "#666" }}>
+              {searchQuery ? `${filteredGrouped.length} of ${grouped.length}` : grouped.length} files
+            </span>
           </div>
           <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
             {messages.length === 0 && !isRunning ? (
@@ -277,8 +417,12 @@ function App() {
                   Waiting for test events... Check console for debugging info.
                 </div>
               </li>
+            ) : filteredGrouped.length === 0 ? (
+              <li style={{ color: "#666", padding: "1rem", border: "1px solid #eee", borderRadius: 6, background: "#f9f9f9" }}>
+                No tests match your search query "{searchQuery}"
+              </li>
             ) : (
-              grouped.map((group, gi) => {
+              filteredGrouped.map((group, gi) => {
                 if (group.unassigned) {
                   return (
                     <li key={gi} style={{ marginBottom: 8, border: "1px solid #eee", borderRadius: 6, padding: 8, background: "#f5f5f5" }}>
@@ -309,7 +453,9 @@ function App() {
                       <summary style={{ cursor: "pointer", padding: 16, background: headerBg, borderBottom: "1px solid #eee", borderTopLeftRadius: 8, borderTopRightRadius: 8 }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                           <div>
-                            <strong style={{ marginRight: 12, fontSize: 16 }}>{group.testClass}</strong>
+                            <strong style={{ marginRight: 12, fontSize: 16 }}>
+                              {highlightText(group.testClass, searchQuery)}
+                            </strong>
                             {isCurrentlyRunning ? (
                               <span style={{ fontSize: 12, fontWeight: 600, color: "#007bff", background: "#e6f3ff", padding: "4px 8px", borderRadius: 4 }}>🔄 RUNNING</span>
                             ) : (
@@ -356,7 +502,9 @@ function App() {
                               <summary style={{ cursor: "pointer", padding: 12, background: methodBg, borderBottom: "1px solid #ddd", borderRadius: 6 }}>
                                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                   <div>
-                                    <strong style={{ fontSize: 14 }}>{method.methodName}</strong>
+                                    <strong style={{ fontSize: 14 }}>
+                                      {highlightText(method.methodName, searchQuery)}
+                                    </strong>
                                     <span style={{
                                       fontSize: 11,
                                       fontWeight: 600,
@@ -393,7 +541,9 @@ function App() {
                                         boxShadow: "0 1px 2px rgba(0,0,0,0.1)"
                                       }}>
                                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                                        <strong style={{ fontSize: 13 }}>{evt.step_name}</strong>
+                                        <strong style={{ fontSize: 13 }}>
+                                          {highlightText(evt.step_name, searchQuery)}
+                                        </strong>
                                         {isStepRunning ? (
                                           <span style={{ fontSize: 11, fontWeight: 600, color: "#007bff", background: "#e6f3ff", padding: "2px 6px", borderRadius: 3 }}>🔄 RUNNING</span>
                                         ) : (
@@ -410,7 +560,9 @@ function App() {
                                         )}
                                       </div>
                                       {evt.detail && (
-                                        <div style={{ marginTop: 6, color: "#444", fontSize: 12, fontFamily: "monospace" }}>{evt.detail}</div>
+                                        <div style={{ marginTop: 6, color: "#444", fontSize: 12, fontFamily: "monospace" }}>
+                                          {highlightText(evt.detail, searchQuery)}
+                                        </div>
                                       )}
                                       {(evt.data_url || evt.screenshot) && (
                                         <div style={{ marginTop: 8 }}>
@@ -429,7 +581,9 @@ function App() {
                                             overflowX: "auto",
                                             fontSize: 11,
                                             border: "1px solid #ffebee"
-                                          }}>{evt.error}</pre>
+                                          }}>
+                                            {highlightText(evt.error, searchQuery)}
+                                          </pre>
                                         </div>
                                       )}
                                     </li>

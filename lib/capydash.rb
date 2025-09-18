@@ -8,6 +8,7 @@ require "capydash/logger"
 require "capydash/error_handler"
 require "capydash/persistence"
 require "capydash/auth"
+require "capydash/test_data_collector"
 
 module CapyDash
   class << self

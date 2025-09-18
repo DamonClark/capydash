@@ -33,6 +33,9 @@ module CapyDash
       safe_step = step_name.gsub(/\s+/, '_')
       screenshot_path = File.join(base_dir, "#{safe_step}-#{timestamp}.png")
 
+      # Ensure we have an absolute path for Base64 encoding
+      absolute_screenshot_path = File.absolute_path(screenshot_path)
+
       data_url = nil
       if defined?(Capybara)
         begin
@@ -47,9 +50,25 @@ module CapyDash
               Capybara.current_session.save_screenshot(screenshot_path)
             end
             puts "[CapyDash] Saved screenshot: #{screenshot_path}"
-            if File.exist?(screenshot_path)
-              encoded = Base64.strict_encode64(File.binread(screenshot_path))
+
+            # Try to find the actual screenshot file location
+            actual_screenshot_path = nil
+            if File.exist?(absolute_screenshot_path)
+              actual_screenshot_path = absolute_screenshot_path
+            else
+              # Check if it was saved in the capybara tmp directory
+              capybara_path = File.join(Dir.pwd, "tmp", "capybara", screenshot_path)
+              if File.exist?(capybara_path)
+                actual_screenshot_path = capybara_path
+              end
+            end
+
+            if actual_screenshot_path && File.exist?(actual_screenshot_path)
+              encoded = Base64.strict_encode64(File.binread(actual_screenshot_path))
               data_url = "data:image/png;base64,#{encoded}"
+              puts "[CapyDash] Generated data URL for screenshot from: #{actual_screenshot_path}"
+            else
+              puts "[CapyDash] Screenshot file not found. Tried: #{absolute_screenshot_path} and #{capybara_path rescue 'N/A'}"
             end
           end
         rescue => e
