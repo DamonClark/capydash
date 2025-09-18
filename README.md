@@ -284,3 +284,21 @@ MIT License - see LICENSE file for details.
 - GitHub Issues: [Report bugs and request features](https://github.com/damonclark/capydash/issues)
 - Documentation: [Full documentation](https://github.com/damonclark/capydash/wiki)
 - Examples: [Example configurations and usage](https://github.com/damonclark/capydash/examples)
+
+## Publishing
+
+To build and publish this gem:
+
+```bash
+# Build the gem
+gem build capydash.gemspec
+
+# Push to RubyGems (requires authentication)
+gem push capydash-0.1.0.gem
+```
+
+To install the published gem, add to your Gemfile:
+
+```ruby
+gem "capydash"
+```
