@@ -1,17 +1,19 @@
 # capydash.gemspec
+require_relative "lib/capydash/version"
+
 Gem::Specification.new do |spec|
   spec.name          = "capydash"
-  spec.version       = "0.1.0"
-  spec.authors       = ["Your Name"]
-  spec.email         = ["you@example.com"]
+  spec.version       = Capydash::VERSION
+  spec.authors       = ["Damon Clark"]
+  spec.email         = ["dclark312@gmail.com"]
 
   spec.summary       = "Real-time Capybara test dashboard"
   spec.description   = "CapyDash instruments Capybara tests and streams test steps, screenshots, and DOM snapshots to a live dashboard."
-  spec.homepage      = "https://github.com/yourusername/capydash"
+  spec.homepage      = "https://github.com/damonclark/capydash"
   spec.license       = "MIT"
 
-  # Main file
-  spec.files         = Dir["lib/**/*.rb"] + Dir["README.md"]
+  # Specify which files should be added to the gem when it is released.
+  spec.files         = Dir["lib/**/*", "bin/*", "README.md", "LICENSE*", "*.gemspec"]
   spec.require_paths = ["lib"]
 
   # Dependencies
@@ -24,5 +26,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rspec", "~> 3.0"
   spec.add_development_dependency "rails", "~> 7.0"
 
-  spec.metadata["allowed_push_host"] = "TODO: Set to 'https://rubygems.org'"
+  spec.metadata["allowed_push_host"] = "https://rubygems.org"
 end

@@ -16,18 +16,34 @@ A real-time test monitoring dashboard for Rails applications that provides live 
 
 ### 1. Installation
 
+#### Option A: Install from RubyGems (Recommended)
+
 Add to your Gemfile:
 
 ```ruby
-gem 'capydash', path: '/path/to/capydash'
+gem 'capydash'
 ```
 
-Or install from source:
+Then run:
 
 ```bash
-git clone https://github.com/your-username/capydash.git
+bundle install
+```
+
+#### Option B: Install from source
+
+```bash
+git clone https://github.com/damonclark/capydash.git
 cd capydash
 bundle install
+```
+
+#### Option C: Local development
+
+For local development, add to your Gemfile:
+
+```ruby
+gem 'capydash', path: '/path/to/capydash'
 ```
 
 ### 2. Configuration
@@ -265,6 +281,6 @@ MIT License - see LICENSE file for details.
 
 ## Support
 
-- GitHub Issues: [Report bugs and request features](https://github.com/your-username/capydash/issues)
-- Documentation: [Full documentation](https://github.com/your-username/capydash/wiki)
-- Examples: [Example configurations and usage](https://github.com/your-username/capydash/examples)
+- GitHub Issues: [Report bugs and request features](https://github.com/damonclark/capydash/issues)
+- Documentation: [Full documentation](https://github.com/damonclark/capydash/wiki)
+- Examples: [Example configurations and usage](https://github.com/damonclark/capydash/examples)
