@@ -16,6 +16,9 @@ Gem::Specification.new do |spec|
   spec.files         = Dir["lib/**/*", "bin/*", "README.md", "LICENSE*", "*.gemspec"]
   spec.require_paths = ["lib"]
 
+  # Add generator support
+  spec.add_runtime_dependency "railties", ">= 5.0"
+
   # Dependencies
   spec.add_runtime_dependency "capybara", ">= 3.0"
   spec.add_runtime_dependency "faye-websocket"
