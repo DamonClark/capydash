@@ -1,6 +1,6 @@
 # CapyDash
 
-A live dashboard for Capybara tests that provides real-time visualization of test execution with screenshots, step-by-step tracking, comprehensive error reporting, and search capabilities. Perfect for debugging test failures and understanding test behavior.
+A static HTML dashboard for Capybara tests that provides comprehensive test reporting with screenshots, step-by-step tracking, error reporting, and search capabilities. Perfect for debugging test failures and understanding test behavior.
 
 ## Installation
 
@@ -18,24 +18,44 @@ bundle add capydash
 
 ## Usage
 
-1. **Start the dashboard server** in one terminal:
-   ```bash
-   bundle exec rake capydash:server
-   ```
+### Generate Test Report
 
-2. **Start the frontend** in another terminal:
-   ```bash
-   npx vite
-   ```
+After running your Capybara tests, generate a static HTML report:
 
-3. **Open your browser** to `http://localhost:5173` to view the dashboard
+```bash
+bundle exec rake capydash:report
+```
 
-4. **Run your tests** with external WebSocket:
-   ```bash
-   CAPYDASH_EXTERNAL_WS=1 bundle exec rails test
-   ```
+This will create a `capydash_report/index.html` file with:
+- Test steps in chronological order
+- Embedded screenshots for each step
+- Click-to-open/close functionality for screenshots
+- Typeahead search across test names, step text, and pass/fail status
+- Summary statistics
 
-The dashboard will show your tests running in real-time with screenshots, detailed step information, and search functionality to filter tests by name, status, or content.
+### View Report in Browser
+
+**Option 1: Open directly in browser**
+```bash
+open capydash_report/index.html
+```
+
+**Option 2: Use the built-in server**
+```bash
+bundle exec rake capydash:server
+```
+
+Then open `http://localhost:5173` in your browser.
+
+### Run Tests with CapyDash
+
+Run your tests normally - CapyDash will automatically instrument them:
+
+```bash
+bundle exec rails test
+```
+
+The report will be generated in `capydash_report/index.html` after test completion.
 
 ## Development
 

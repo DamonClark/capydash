@@ -34,13 +34,11 @@ module CapyDash
             port: port,
             environment: Rails.env
           })
-          puts "[CapyDash] WebSocket server started on ws://localhost:#{port}"
         else
           CapyDash::Logger.info("Skipping in-process WebSocket server", {
             reason: ENV["CAPYDASH_EXTERNAL_WS"] == "1" ? "external_mode" : "production_environment",
             environment: Rails.env
           })
-          puts "[CapyDash] Skipping in-process WebSocket server (external mode)" if ENV["CAPYDASH_EXTERNAL_WS"] == "1"
         end
       rescue => e
         CapyDash::ErrorHandler.handle_error(e, {

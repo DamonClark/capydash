@@ -34,37 +34,31 @@ module CapyDash
 
     def connect
       url = "ws://127.0.0.1:#{@port}"
-      puts "[CapyDash Forwarder] Attempting to connect to #{url}"
       @ws = Faye::WebSocket::Client.new(url)
 
       @ws.on(:open) do |_event|
         @connected = true
-        puts "[CapyDash Forwarder] Connected to WebSocket server"
         flush_queue
       end
 
       @ws.on(:close) do |_event|
         @connected = false
-        puts "[CapyDash Forwarder] Disconnected from WebSocket server"
         # attempt reconnect after short delay
         EM.add_timer(0.5) { connect }
       end
 
       @ws.on(:error) do |event|
-        puts "[CapyDash Forwarder] WebSocket error: #{event.inspect}"
         # keep trying; errors are expected if server not yet up
       end
     end
 
     def send_message(raw_message)
       message = raw_message.is_a?(String) ? raw_message : JSON.dump(raw_message)
-      puts "[CapyDash Forwarder] Sending message: #{message[0..100]}..."
       @mutex.synchronize do
         if @connected && @ws
           @ws.send(message)
         else
           @queue << message
-          puts "[CapyDash Forwarder] Queued message (not connected)"
         end
       end
     end

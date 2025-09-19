@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CapyDash - Test Dashboard Report</title>
+    <link rel="stylesheet" href="assets/dashboard.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>CapyDash Test Report</h1>
+            <div class="subtitle">Generated on <%= created_at.strftime('%B %d, %Y at %I:%M %p') %></div>
+
+            <div class="search-container">
+                <div class="search-input-wrapper">
+                    <input type="text" id="searchInput" placeholder="Search tests, steps, or errors..." class="search-input" autocomplete="off">
+                    <div id="typeaheadDropdown" class="typeahead-dropdown"></div>
+                </div>
+                <div id="searchStats" class="search-stats"></div>
+            </div>
+        </div>
+
+        <div class="summary">
+            <div class="summary-card total">
+                <div class="number"><%= total_tests %></div>
+                <div class="label">Total Tests</div>
+            </div>
+            <div class="summary-card passed">
+                <div class="number"><%= passed_tests %></div>
+                <div class="label">Passed</div>
+            </div>
+            <div class="summary-card failed">
+                <div class="number"><%= failed_tests %></div>
+                <div class="label">Failed</div>
+            </div>
+        </div>
+
+        <div class="test-results">
+            <% processed_tests.each do |test_class| %>
+                <div class="test-class">
+                    <h2><%= test_class[:class_name] %></h2>
+
+                    <% test_class[:methods].each do |method| %>
+                        <div class="test-method">
+                            <div class="test-method-header">
+                                <button class="expand-toggle" onclick="toggleTestMethod('<%= method[:name] %>')">
+                                    <span class="expand-icon">▶</span>
+                                </button>
+                                <h3><%= method[:name] %></h3>
+                            </div>
+                            <div class="steps collapsed" id="steps-<%= method[:name] %>">
+                                <% method[:steps].each_with_index do |step, step_index| %>
+                                    <div class="step <%= step[:status] %>">
+                                        <div class="step-header">
+                                            <span class="step-name"><%= step[:name] %></span>
+                                            <span class="step-status"><%= step[:status] %></span>
+
+                                            <% if step[:screenshot] %>
+                                                <button class="screenshot-toggle" onclick="toggleScreenshot('<%= method[:name] %>-<%= step_index %>')">
+                                                    📸 Screenshot
+                                                </button>
+                                            <% end %>
+                                        </div>
+                                        <div class="step-detail"><%= step[:detail] %></div>
+
+                                        <% if step[:error] %>
+                                            <div class="error-log">
+                                                <h4>Error Details</h4>
+                                                <pre><%= step[:error] %></pre>
+                                            </div>
+                                        <% end %>
+
+                                        <% if step[:screenshot] %>
+                                            <div class="screenshot-container" id="screenshot-<%= method[:name] %>-<%= step_index %>" style="display: none;">
+                                                <div class="screenshot">
+                                                    <img src="screenshots/<%= step[:screenshot] %>" alt="Screenshot">
+                                                </div>
+                                            </div>
+                                        <% end %>
+                                    </div>
+                                <% end %>
+                            </div>
+                        </div>
+                    <% end %>
+                </div>
+            <% end %>
+        </div>
+    </div>
+    <script src="assets/dashboard.js"></script>
+</body>
+</html>

@@ -10,11 +10,6 @@ module CapyDash
 
         begin
           File.write(file_path, JSON.pretty_generate(test_run_data))
-          Logger.info("Test run saved", {
-            run_id: test_run_data[:id],
-            file_path: file_path,
-            test_count: test_run_data[:tests]&.length || 0
-          })
           file_path
         rescue => e
           ErrorHandler.handle_error(e, {

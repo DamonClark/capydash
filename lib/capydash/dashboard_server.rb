@@ -87,7 +87,6 @@ module CapyDash
                     command: args.join(' '),
                     client_id: ws.object_id
                   })
-                  puts "[CapyDash] Running command: #{args.join(' ')}"
 
                   Thread.new do
                     begin
@@ -100,21 +99,16 @@ module CapyDash
                         directory: dummy_app_path,
                         exists: Dir.exist?(dummy_app_path)
                       })
-                      puts "[CapyDash] Running tests in: #{dummy_app_path}"
-                      puts "[CapyDash] Directory exists: #{Dir.exist?(dummy_app_path)}"
 
                       Dir.chdir(dummy_app_path) do
                         # Set Rails environment and ensure CapyDash is loaded
                         ENV["RAILS_ENV"] = "test"
                         ENV["CAPYDASH_EXTERNAL_WS"] = "1"  # Use external WebSocket mode
 
-                        puts "[CapyDash] Current directory: #{Dir.pwd}"
-                        puts "[CapyDash] Running: #{args.join(' ')}"
 
                         # Run the command and capture both stdout and stderr
                         IO.popen(args, err: [:child, :out]) do |io|
                           io.each_line do |line|
-                            puts "[CapyDash] Test output: #{line.strip}"
                             event = { type: "runner", line: line.strip, status: "running", ts: Time.now.to_i }
                             broadcast(event.to_json)
                           end
@@ -132,8 +126,6 @@ module CapyDash
                 end
               rescue => e
                 CapyDash::ErrorHandler.handle_websocket_error(e, ws)
-                warn "[CapyDash] ws.onmessage error: #{e.message}"
-                puts "[CapyDash] Backtrace: #{e.backtrace.first(5).join("\n")}"
               end
             end
 
