@@ -103,31 +103,6 @@ module Capydash
         end
       end
 
-      def create_example_test
-        example_test_path = "test/system/capydash_example_test.rb"
-
-        unless File.exist?(example_test_path)
-          create_file example_test_path, <<~RUBY
-            require "application_system_test_case"
-
-            class CapydashExampleTest < ApplicationSystemTestCase
-              test "example test for CapyDash" do
-                visit "/"
-
-                # This test will be captured by CapyDash
-                assert_text "Welcome"
-
-                # Fill in a form
-                fill_in "Your name", with: "Alice" if page.has_field?("Your name")
-                click_button "Submit" if page.has_button?("Submit")
-              end
-            end
-          RUBY
-          say "Created example test at #{example_test_path}"
-        else
-          say "Example test already exists at #{example_test_path}", :yellow
-        end
-      end
 
       def show_instructions
         say "\n" + "="*60, :green
@@ -137,6 +112,10 @@ module Capydash
         say "1. Run your tests: bundle exec rails test"
         say "2. Generate report: bundle exec rake capydash:report"
         say "3. View report: open capydash_report/index.html"
+        say "\nImportant:", :yellow
+        say "- CapyDash only captures system tests that use Capybara methods (visit, click, fill_in, etc.)"
+        say "- Unit tests and integration tests without Capybara won't appear in the report"
+        say "- Works with parallel testing - no configuration needed"
         say "\nFor more information, see the README.md file."
         say "="*60, :green
       end

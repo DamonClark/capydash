@@ -30,7 +30,7 @@ This will automatically:
 - ✅ Create the CapyDash initializer
 - ✅ Update your test helper with all necessary hooks
 - ✅ Add rake tasks for report generation
-- ✅ Create an example test to get you started
+- ✅ Works with parallel testing out of the box
 
 ### Manual Setup (Alternative)
 
@@ -86,6 +86,8 @@ Then open `http://localhost:4000` in your browser.
 3. **Screenshots not working**: Make sure you're using a driver that supports screenshots (like Selenium, not rack_test).
 
 4. **Tests not appearing in report**: Ensure your tests are using Capybara methods like `visit`, `click_button`, `fill_in`, etc.
+
+5. **"No test data found"**: Make sure you're running system tests that use Capybara methods. CapyDash works with parallel testing by default.
 
 ### Example Test
 
