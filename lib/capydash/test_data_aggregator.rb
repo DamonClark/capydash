@@ -7,6 +7,9 @@ module CapyDash
   class TestDataAggregator
     class << self
       def start_test_run
+        # Don't start a new run if one is already in progress
+        return if test_run_started?
+
         run_id = generate_run_id
         run_data = {
           id: run_id,
@@ -22,6 +25,10 @@ module CapyDash
 
         # Set current test context
         set_current_test_context(run_id, nil, [])
+      end
+
+      def test_run_started?
+        get_current_run_id != nil
       end
 
       def finish_test_run
