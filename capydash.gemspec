@@ -27,7 +27,7 @@ Gem::Specification.new do |spec|
 
   # Development dependencies
   spec.add_development_dependency "rspec", "~> 3.0"
-  spec.add_development_dependency "rails", "~> 7.0"
+  spec.add_development_dependency "rails", "~> 8.0"
 
   spec.metadata["allowed_push_host"] = "https://rubygems.org"
 end

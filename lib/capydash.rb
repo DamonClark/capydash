@@ -1,4 +1,5 @@
 require 'ostruct'
+require "capydash/version"
 require "capydash/engine"
 require "capydash/instrumentation"
 require "capydash/event_emitter"
