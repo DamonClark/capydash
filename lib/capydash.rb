@@ -13,6 +13,12 @@ require "capydash/test_data_collector"
 require "capydash/test_data_aggregator"
 require "capydash/report_generator"
 
+# Conditionally load RSpec integration if RSpec is present
+if defined?(RSpec)
+  require "capydash/rspec_integration"
+  CapyDash::RSpecIntegration.setup!
+end
+
 module CapyDash
   class << self
     attr_accessor :configuration, :current_test, :config
