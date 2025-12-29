@@ -1,3 +1,3 @@
-module Capydash
-  VERSION = "0.2.0"
+module CapyDash
+  VERSION = "0.2.1"
 end

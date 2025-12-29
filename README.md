@@ -1,6 +1,14 @@
 # CapyDash
 
-A static HTML dashboard for Capybara tests that provides comprehensive test reporting with screenshots, step-by-step tracking, error reporting, and search capabilities. Perfect for debugging test failures and understanding test behavior.
+A minimal static HTML report generator for RSpec system tests. CapyDash automatically generates a clean, readable test report after your RSpec suite finishes.
+
+## Features
+
+- ✅ **Automatic report generation** - No configuration needed
+- ✅ **RSpec system test support** - Works out of the box with `rspec-rails`
+- ✅ **Clean HTML reports** - Simple, readable test results
+- ✅ **Error details** - Full exception messages and backtraces
+- ✅ **Zero configuration** - Just add the gem and run your tests
 
 ## Installation
 
@@ -8,237 +16,128 @@ Add to your Gemfile:
 
 ```ruby
 gem "capydash"
+gem "rspec-rails"
 ```
 
-Or run:
+Then run:
 
 ```bash
-bundle add capydash
+bundle install
 ```
-
-## Quick Setup
-
-### One-Command Installation
-
-After adding CapyDash to your Gemfile and running `bundle install`, simply run:
-
-```bash
-bundle exec rails generate capydash:install
-```
-
-This will automatically:
-- ✅ Create the CapyDash initializer
-- ✅ Update your test helper with all necessary hooks
-- ✅ Add rake tasks for report generation
-- ✅ Works with parallel testing out of the box
-
-### Manual Setup (Alternative)
-
-If you prefer to set up CapyDash manually, see the [Manual Setup Guide](#manual-setup) below.
 
 ## Usage
 
-### Run Tests with CapyDash
-
-Run your tests normally - CapyDash will automatically instrument them:
+That's it! CapyDash automatically hooks into RSpec when it detects it. Just run your tests:
 
 ```bash
-bundle exec rails test
+bundle exec rspec
 ```
 
-### Generate Test Report
+After your test suite completes, CapyDash will automatically generate a report at:
 
-After running your Capybara tests, generate a static HTML report:
-
-```bash
-bundle exec rake capydash:report
+```
+capydash_report/index.html
 ```
 
-This will create a `capydash_report/index.html` file with:
-- Test steps in chronological order
-- Embedded screenshots for each step
-- Click-to-open/close functionality for screenshots
-- Typeahead search across test names, step text, and pass/fail status
-- Summary statistics
+Open it in your browser to view the results.
 
-### View Report in Browser
+## Example Test
 
-**Option 1: Open directly in browser**
-```bash
-open capydash_report/index.html
+Here's an example RSpec system test:
+
+```ruby
+require 'rails_helper'
+
+RSpec.describe "Homepage", type: :system do
+  it "displays the welcome message" do
+    visit "/"
+    expect(page).to have_content("Welcome")
+  end
+
+  it "allows user to submit a form" do
+    visit "/"
+    fill_in "Your name", with: "Alice"
+    click_button "Greet"
+    expect(page).to have_content("Hello, Alice!")
+  end
+end
 ```
 
-**Option 2: Use the built-in server**
-```bash
-bundle exec rake capydash:server
-```
+## Report Features
 
-Then open `http://localhost:4000` in your browser.
+The generated report includes:
+
+- **Summary statistics** - Total, passed, and failed test counts
+- **Test grouping** - Tests organized by spec file
+- **Expandable test details** - Click to view error messages
+- **Error information** - Full exception messages and backtraces
+- **Clean design** - Simple, readable HTML layout
+
+## Requirements
+
+- Ruby 2.7+
+- RSpec 3.0+
+- Rails 6.0+ (for system tests)
+
+## How It Works
+
+1. CapyDash automatically detects when RSpec is present
+2. Hooks into RSpec's `before(:suite)`, `after(:each)`, and `after(:suite)` callbacks
+3. Collects test results in memory during the test run
+4. Generates a static HTML report after all tests complete
+5. Saves the report to `capydash_report/index.html`
 
 ## Troubleshooting
 
-### Common Issues
+### Report not generated
 
-1. **"No test data found"**: Make sure you've added the test helper configuration and are running actual Capybara tests (not just unit tests).
+- Make sure you're running RSpec tests (not Minitest)
+- Ensure `rspec-rails` is in your Gemfile
+- Check that tests actually ran (no early exits)
 
-2. **"log shifting failed" error**: This is a Rails logger issue, not related to CapyDash. It's harmless but you can fix it by updating your Rails version.
+### Tests not appearing in report
 
-3. **Screenshots not working**: Make sure you're using a driver that supports screenshots (like Selenium, not rack_test).
+- Verify you're using RSpec system tests (`type: :system`)
+- Make sure the test suite completed (not interrupted)
 
-4. **Tests not appearing in report**: Ensure your tests are using Capybara methods like `visit`, `click_button`, `fill_in`, etc.
+### Report shows old results
 
-5. **"No test data found"**: Make sure you're running system tests that use Capybara methods. CapyDash works with parallel testing by default.
-
-### Example Test
-
-Here's an example test that will work with CapyDash:
-
-```ruby
-require 'test_helper'
-
-class HomepageTest < ActionDispatch::IntegrationTest
-  include Capybara::DSL
-
-  test "homepage loads with correct content" do
-    visit "/"
-    assert_text "Welcome"
-
-    fill_in "Your name", with: "Alice"
-    click_button "Greet"
-    assert_text "Hello, Alice!"
-  end
-end
-```
-
-## Manual Setup
-
-If you prefer to set up CapyDash manually instead of using the generator:
-
-### Step 1: Create CapyDash Initializer
-
-Create `config/initializers/capydash.rb` in your Rails project:
-
-```ruby
-require 'capydash'
-
-# Configure CapyDash
-CapyDash.configure do |config|
-  config.port = 4000
-  config.screenshot_path = "tmp/capydash_screenshots"
-end
-
-# Subscribe to events for test data collection
-CapyDash::EventEmitter.subscribe do |event|
-  # Collect test data for report generation
-  CapyDash::TestDataAggregator.handle_event(event)
-end
-```
-
-### Step 2: Update Test Helper
-
-In your `test/test_helper.rb`, add the following:
-
-```ruby
-require 'capydash'
-
-# Start test run data collection
-CapyDash::TestDataCollector.start_test_run
-
-# Hook into test execution to set current test name and manage test runs
-module CapyDash
-  module TestHooks
-    def run(&block)
-      # Set the current test name for CapyDash
-      CapyDash.current_test = self.name
-
-      # Start test run data collection if not already started
-      CapyDash::TestDataAggregator.start_test_run unless CapyDash::TestDataAggregator.instance_variable_get(:@current_run)
-
-      super
-    end
-  end
-end
-
-# Apply the hook to the test case
-class ActiveSupport::TestCase
-  prepend CapyDash::TestHooks
-end
-
-# Hook to finish test run when all tests are done
-Minitest.after_run do
-  CapyDash::TestDataCollector.finish_test_run
-  CapyDash::TestDataAggregator.finish_test_run
-end
-```
-
-### Step 3: Add Rake Tasks
-
-Create `lib/tasks/capydash.rake` in your Rails project:
-
-```ruby
-namespace :capydash do
-  desc "Generate static HTML test report"
-  task :report => :environment do
-    CapyDash::ReportGenerator.generate_report
-  end
-
-  desc "Start local server to view static HTML report"
-  task :server => :environment do
-    CapyDash::DashboardServer.start
-  end
-end
-```
-
-### Step 4: Configure System Tests (Optional)
-
-If you're using system tests, make sure your `test/application_system_test_case.rb` uses a driver that supports screenshots:
-
-```ruby
-require "test_helper"
-
-class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
-  driven_by :selenium, using: :headless_chrome, screen_size: [ 800, 600 ]
-end
-```
+- Delete the `capydash_report` directory and run tests again
+- The report is regenerated on each test run
 
 ## Development
 
-### Testing with Dummy App
-
-The project includes a dummy Rails app for testing. To run it:
+### Running Tests
 
 ```bash
-cd spec/dummy_app
-bundle install
-bundle exec rails test
+# In a Rails app with RSpec
+bundle exec rspec
 ```
 
-### Development Setup
+### Building the Gem
 
-1. Clone the repository
-2. Install dependencies: `bundle install`
-3. Run the dummy app tests to verify everything works
-4. Make your changes
-5. Test with the dummy app
+```bash
+gem build capydash.gemspec
+```
+
+### Publishing
+
+```bash
+gem push capydash-0.2.0.gem
+```
+
+## License
+
+MIT
 
 ## Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Test with the dummy app
+4. Test with RSpec
 5. Submit a pull request
 
-## Publishing
+---
 
-Build the gem:
-
-```bash
-gem build capydash.gemspec
-```
-
-Push to RubyGems:
-
-```bash
-gem push capydash-0.1.0.gem
-```
+**Note:** CapyDash is a minimal MVP focused solely on RSpec system test reporting. It does not support Minitest, configuration DSLs, local servers, or screenshots. For a simple, zero-configuration test reporting solution, CapyDash is perfect.

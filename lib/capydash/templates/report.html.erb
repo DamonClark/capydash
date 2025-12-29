@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CapyDash - Test Dashboard Report</title>
+    <title>CapyDash - Test Report</title>
     <link rel="stylesheet" href="assets/dashboard.css">
 </head>
 <body>
@@ -11,14 +11,6 @@
         <div class="header">
             <h1>CapyDash Test Report</h1>
             <div class="subtitle">Generated on <%= created_at.strftime('%B %d, %Y at %I:%M %p') %></div>
-
-            <div class="search-container">
-                <div class="search-input-wrapper">
-                    <input type="text" id="searchInput" placeholder="Search tests, steps, or errors..." class="search-input" autocomplete="off">
-                    <div id="typeaheadDropdown" class="typeahead-dropdown"></div>
-                </div>
-                <div id="searchStats" class="search-stats"></div>
-            </div>
         </div>
 
         <div class="summary">
@@ -44,23 +36,17 @@
                     <% test_class[:methods].each do |method| %>
                         <div class="test-method">
                             <div class="test-method-header">
-                                <button class="expand-toggle" onclick="toggleTestMethod('<%= method[:name] %>')">
+                                <button class="expand-toggle" onclick="toggleTestMethod('<%= method[:safe_id] %>')">
                                     <span class="expand-icon">▶</span>
                                 </button>
                                 <h3><%= method[:name] %></h3>
                             </div>
-                            <div class="steps collapsed" id="steps-<%= method[:name] %>">
-                                <% method[:steps].each_with_index do |step, step_index| %>
+                            <div class="steps collapsed" id="steps-<%= method[:safe_id] %>">
+                                <% method[:steps].each do |step| %>
                                     <div class="step <%= step[:status] %>">
                                         <div class="step-header">
                                             <span class="step-name"><%= step[:name] %></span>
                                             <span class="step-status"><%= step[:status] %></span>
-
-                                            <% if step[:screenshot] %>
-                                                <button class="screenshot-toggle" onclick="toggleScreenshot('<%= method[:name] %>-<%= step_index %>')">
-                                                    📸 Screenshot
-                                                </button>
-                                            <% end %>
                                         </div>
                                         <div class="step-detail"><%= step[:detail] %></div>
 
@@ -68,14 +54,6 @@
                                             <div class="error-log">
                                                 <h4>Error Details</h4>
                                                 <pre><%= step[:error] %></pre>
-                                            </div>
-                                        <% end %>
-
-                                        <% if step[:screenshot] %>
-                                            <div class="screenshot-container" id="screenshot-<%= method[:name] %>-<%= step_index %>" style="display: none;">
-                                                <div class="screenshot">
-                                                    <img src="screenshots/<%= step[:screenshot] %>" alt="Screenshot">
-                                                </div>
                                             </div>
                                         <% end %>
                                     </div>
