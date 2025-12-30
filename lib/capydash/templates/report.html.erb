@@ -11,6 +11,10 @@
         <div class="header">
             <h1>CapyDash Test Report</h1>
             <div class="subtitle">Generated on <%= created_at.strftime('%B %d, %Y at %I:%M %p') %></div>
+
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Search tests or type 'pass' or 'fail' to filter..." class="search-input" autocomplete="off">
+            </div>
         </div>
 
         <div class="summary">
@@ -34,12 +38,13 @@
                     <h2><%= test_class[:class_name] %></h2>
 
                     <% test_class[:methods].each do |method| %>
-                        <div class="test-method">
+                        <div class="test-method" data-status="<%= method[:status] %>" data-name="<%= method[:name].downcase %>">
                             <div class="test-method-header">
                                 <button class="expand-toggle" onclick="toggleTestMethod('<%= method[:safe_id] %>')">
                                     <span class="expand-icon">▶</span>
                                 </button>
                                 <h3><%= method[:name] %></h3>
+                                <span class="method-status method-status-<%= method[:status] %>"><%= method[:status] %></span>
                             </div>
                             <div class="steps collapsed" id="steps-<%= method[:safe_id] %>">
                                 <% method[:steps].each do |step| %>

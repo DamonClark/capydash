@@ -199,6 +199,58 @@ module CapyDash
           .header .subtitle {
               color: #666;
               font-size: 0.9rem;
+              margin-bottom: 1rem;
+          }
+
+          .search-container {
+              margin-top: 1rem;
+          }
+
+          .search-input {
+              width: 100%;
+              padding: 0.75rem 1rem;
+              border: 2px solid #ddd;
+              border-radius: 6px;
+              font-size: 1rem;
+              transition: border-color 0.2s;
+          }
+
+          .search-input:focus {
+              outline: none;
+              border-color: #3498db;
+              box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+          }
+
+          .test-method.hidden {
+              display: none;
+          }
+
+          .test-class.hidden {
+              display: none;
+          }
+
+          .method-status {
+              padding: 0.25rem 0.75rem;
+              border-radius: 4px;
+              font-size: 0.75rem;
+              font-weight: 600;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+          }
+
+          .method-status-passed {
+              background: #27ae60;
+              color: white;
+          }
+
+          .method-status-failed {
+              background: #e74c3c;
+              color: white;
+          }
+
+          .method-status-pending {
+              background: #f39c12;
+              color: white;
           }
 
           .summary {
@@ -287,6 +339,38 @@ module CapyDash
               font-size: 1.1rem;
               color: #34495e;
               flex: 1;
+          }
+
+          .test-method.hidden {
+              display: none;
+          }
+
+          .test-class.hidden {
+              display: none;
+          }
+
+          .method-status {
+              padding: 0.25rem 0.75rem;
+              border-radius: 4px;
+              font-size: 0.75rem;
+              font-weight: 600;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+          }
+
+          .method-status-passed {
+              background: #27ae60;
+              color: white;
+          }
+
+          .method-status-failed {
+              background: #e74c3c;
+              color: white;
+          }
+
+          .method-status-pending {
+              background: #f39c12;
+              color: white;
           }
 
           .expand-toggle {
@@ -423,6 +507,59 @@ module CapyDash
                   }
               }
           }
+
+          // Search functionality
+          document.addEventListener('DOMContentLoaded', function() {
+              const searchInput = document.getElementById('searchInput');
+              if (!searchInput) return;
+
+              searchInput.addEventListener('input', function(e) {
+                  const query = e.target.value.toLowerCase().trim();
+                  const testMethods = document.querySelectorAll('.test-method');
+                  const testClasses = document.querySelectorAll('.test-class');
+
+                  // Determine if query is a status filter
+                  const isStatusFilter = query === 'pass' || query === 'fail' ||
+                                        query === 'passed' || query === 'failed' ||
+                                        query === 'pending';
+
+                  testMethods.forEach(function(method) {
+                      const name = method.getAttribute('data-name') || '';
+                      const status = method.getAttribute('data-status') || '';
+
+                      let shouldShow = false;
+
+                      if (!query) {
+                          // No query - show all
+                          shouldShow = true;
+                      } else if (isStatusFilter) {
+                          // Status filter - check status
+                          shouldShow = (query === 'pass' && status === 'passed') ||
+                                      (query === 'fail' && status === 'failed') ||
+                                      query === status;
+                      } else {
+                          // Name filter - check if name contains query
+                          shouldShow = name.includes(query);
+                      }
+
+                      if (shouldShow) {
+                          method.classList.remove('hidden');
+                      } else {
+                          method.classList.add('hidden');
+                      }
+                  });
+
+                  // Hide test classes if all methods are hidden
+                  testClasses.forEach(function(testClass) {
+                      const visibleMethods = testClass.querySelectorAll('.test-method:not(.hidden)');
+                      if (visibleMethods.length === 0) {
+                          testClass.classList.add('hidden');
+                      } else {
+                          testClass.classList.remove('hidden');
+                      }
+                  });
+              });
+          });
         JS
       end
     end
