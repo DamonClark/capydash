@@ -44,7 +44,9 @@
                                     <span class="expand-icon">▶</span>
                                 </button>
                                 <h3><%= method[:name] %></h3>
-                                <span class="method-status method-status-<%= method[:status] %>"><%= method[:status] %></span>
+                                <% if method[:status] %>
+                                    <span class="method-status method-status-<%= method[:status] %>"><%= method[:status] %></span>
+                                <% end %>
                             </div>
                             <div class="steps collapsed" id="steps-<%= method[:safe_id] %>">
                                 <% method[:steps].each do |step| %>

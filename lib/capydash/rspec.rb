@@ -334,26 +334,31 @@ module CapyDash
           }
 
           .method-status {
-              padding: 0.25rem 0.75rem;
+              display: inline-flex;
+              align-items: center;
+              padding: 0.35rem 0.85rem;
               border-radius: 4px;
               font-size: 0.75rem;
               font-weight: 600;
               text-transform: uppercase;
               letter-spacing: 0.5px;
+              white-space: nowrap;
+              min-width: 60px;
+              justify-content: center;
           }
 
           .method-status-passed {
-              background: #27ae60;
+              background-color: #27ae60;
               color: white;
           }
 
           .method-status-failed {
-              background: #e74c3c;
+              background-color: #e74c3c;
               color: white;
           }
 
           .method-status-pending {
-              background: #f39c12;
+              background-color: #f39c12;
               color: white;
           }
 
