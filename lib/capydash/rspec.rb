@@ -5,54 +5,18 @@ require 'erb'
 module CapyDash
   module RSpec
     class << self
-      def setup!
-        return unless rspec_available?
-        return if @configured
-
-        begin
-          @configured = true
-          @results = []
-          @started_at = nil
-
-          ::RSpec.configure do |config|
-            config.before(:suite) do
-              CapyDash::RSpec.start_run
-            end
-
-            config.after(:each) do |example|
-              CapyDash::RSpec.record_example(example)
-            end
-
-            config.after(:suite) do
-              CapyDash::RSpec.generate_report
-            end
-          end
-        rescue => e
-          # If RSpec isn't ready, silently fail - it will be set up later
-          @configured = false
-        end
-      end
-
-      private
-
-      def rspec_available?
-        return false unless defined?(::RSpec)
-        return false unless ::RSpec.respond_to?(:configure)
-        true
-      rescue
-        false
-      end
-
+      # Public method: Called from RSpec before(:suite) hook
       def start_run
         @results = []
         @started_at = Time.now
       end
 
+      # Public method: Called from RSpec after(:each) hook
       def record_example(example)
         return unless @started_at
 
         execution_result = example.execution_result
-        status = execution_result.status.to_s
+        status = normalize_status(execution_result.status)
 
         error_message = nil
         if execution_result.status == :failed && execution_result.exception
@@ -71,6 +35,7 @@ module CapyDash
         }
       end
 
+      # Public method: Called from RSpec after(:suite) hook
       def generate_report
         return unless @started_at
         return if @results.empty?
@@ -123,7 +88,58 @@ module CapyDash
         report_dir
       end
 
+      # Public method: Sets up RSpec hooks
+      def setup!
+        return unless rspec_available?
+        return if @configured
+
+        begin
+          @configured = true
+          @results = []
+          @started_at = nil
+
+          ::RSpec.configure do |config|
+            config.before(:suite) do
+              CapyDash::RSpec.start_run
+            end
+
+            config.after(:each) do |example|
+              CapyDash::RSpec.record_example(example)
+            end
+
+            config.after(:suite) do
+              CapyDash::RSpec.generate_report
+            end
+          end
+        rescue => e
+          # If RSpec isn't ready, silently fail - it will be set up later
+          @configured = false
+        end
+      end
+
       private
+
+      def rspec_available?
+        return false unless defined?(::RSpec)
+        return false unless ::RSpec.respond_to?(:configure)
+        true
+      rescue
+        false
+      end
+
+      def normalize_status(status)
+        # Normalize RSpec status symbols to strings
+        case status
+        when :passed, 'passed'
+          'passed'
+        when :failed, 'failed'
+          'failed'
+        when :pending, 'pending'
+          'pending'
+        else
+          status.to_s
+        end
+      end
 
       def extract_class_name(file_path)
         return 'UnknownSpec' if file_path.nil? || file_path.empty?
@@ -221,38 +237,6 @@ module CapyDash
               box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
           }
 
-          .test-method.hidden {
-              display: none;
-          }
-
-          .test-class.hidden {
-              display: none;
-          }
-
-          .method-status {
-              padding: 0.25rem 0.75rem;
-              border-radius: 4px;
-              font-size: 0.75rem;
-              font-weight: 600;
-              text-transform: uppercase;
-              letter-spacing: 0.5px;
-          }
-
-          .method-status-passed {
-              background: #27ae60;
-              color: white;
-          }
-
-          .method-status-failed {
-              background: #e74c3c;
-              color: white;
-          }
-
-          .method-status-pending {
-              background: #f39c12;
-              color: white;
-          }
-
           .summary {
               display: grid;
               grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -308,6 +292,10 @@ module CapyDash
               border-bottom: none;
           }
 
+          .test-class.hidden {
+              display: none;
+          }
+
           .test-class h2 {
               background: #f8f9fa;
               padding: 1rem 1.5rem;
@@ -326,6 +314,10 @@ module CapyDash
               border-bottom: none;
           }
 
+          .test-method.hidden {
+              display: none;
+          }
+
           .test-method-header {
               display: flex;
               align-items: center;
@@ -339,14 +331,6 @@ module CapyDash
               font-size: 1.1rem;
               color: #34495e;
               flex: 1;
-          }
-
-          .test-method.hidden {
-              display: none;
-          }
-
-          .test-class.hidden {
-              display: none;
           }
 
           .method-status {
