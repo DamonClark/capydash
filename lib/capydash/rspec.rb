@@ -1,8 +1,29 @@
 require 'time'
 require 'fileutils'
 require 'erb'
+require 'cgi'
 
 module CapyDash
+  class ReportData
+    attr_reader :processed_tests, :created_at, :total_tests, :passed_tests, :failed_tests
+
+    def initialize(processed_tests:, created_at:, total_tests:, passed_tests:, failed_tests:)
+      @processed_tests = processed_tests
+      @created_at = created_at
+      @total_tests = total_tests
+      @passed_tests = passed_tests
+      @failed_tests = failed_tests
+    end
+
+    def h(text)
+      CGI.escapeHTML(text.to_s)
+    end
+
+    def get_binding
+      binding
+    end
+  end
+
   module RSpec
     class << self
       # Public method: Called from RSpec before(:suite) hook
@@ -23,8 +44,7 @@ module CapyDash
           error_message = format_exception(execution_result.exception)
         end
 
-        file_path = example.metadata[:file_path] || ''
-        class_name = extract_class_name(file_path)
+        class_name = extract_class_name(example)
 
         @results << {
           class_name: class_name,
@@ -128,7 +148,6 @@ module CapyDash
       end
 
       def normalize_status(status)
-        # Normalize RSpec status symbols to strings
         case status
         when :passed, 'passed'
           'passed'
@@ -141,11 +160,20 @@ module CapyDash
         end
       end
 
-      def extract_class_name(file_path)
-        return 'UnknownSpec' if file_path.nil? || file_path.empty?
+      def extract_class_name(example)
+        group = example.metadata[:example_group]
+        while group && group[:parent_example_group]
+          group = group[:parent_example_group]
+        end
 
-        filename = File.basename(file_path, '.rb')
-        filename.split('_').map(&:capitalize).join('')
+        if group && group[:description] && !group[:description].to_s.empty?
+          group[:description].to_s
+        else
+          file_path = example.metadata[:file_path] || ''
+          return 'UnknownSpec' if file_path.empty?
+          filename = File.basename(file_path, '.rb')
+          filename.split('_').map(&:capitalize).join('')
+        end
       end
 
       def format_exception(exception)
@@ -174,382 +202,23 @@ module CapyDash
         template = File.read(template_path)
         erb = ERB.new(template)
 
-        erb.result(binding)
+        report_data = CapyDash::ReportData.new(
+          processed_tests: processed_tests,
+          created_at: created_at,
+          total_tests: total_tests,
+          passed_tests: passed_tests,
+          failed_tests: failed_tests
+        )
+
+        erb.result(report_data.get_binding)
       end
 
       def generate_css
-        <<~CSS
-          * {
-              margin: 0;
-              padding: 0;
-              box-sizing: border-box;
-          }
-
-          body {
-              font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-              line-height: 1.6;
-              color: #333;
-              background-color: #f8f9fa;
-          }
-
-          .container {
-              max-width: 1400px;
-              margin: 0 auto;
-              padding: 1rem;
-          }
-
-          .header {
-              background: white;
-              padding: 1.5rem;
-              border-radius: 8px;
-              box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-              margin-bottom: 1.5rem;
-          }
-
-          .header h1 {
-              font-size: 2rem;
-              margin-bottom: 0.5rem;
-              color: #2c3e50;
-          }
-
-          .header .subtitle {
-              color: #666;
-              font-size: 0.9rem;
-              margin-bottom: 1rem;
-          }
-
-          .search-container {
-              margin-top: 1rem;
-          }
-
-          .search-input {
-              width: 100%;
-              padding: 0.75rem 1rem;
-              border: 2px solid #ddd;
-              border-radius: 6px;
-              font-size: 1rem;
-              transition: border-color 0.2s;
-          }
-
-          .search-input:focus {
-              outline: none;
-              border-color: #3498db;
-              box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
-          }
-
-          .summary {
-              display: grid;
-              grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-              gap: 1rem;
-              margin-bottom: 1.5rem;
-          }
-
-          .summary-card {
-              background: white;
-              padding: 1.5rem;
-              border-radius: 8px;
-              box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-              text-align: center;
-          }
-
-          .summary-card .number {
-              font-size: 2.5rem;
-              font-weight: bold;
-              margin-bottom: 0.5rem;
-          }
-
-          .summary-card.total .number {
-              color: #3498db;
-          }
-
-          .summary-card.passed .number {
-              color: #27ae60;
-          }
-
-          .summary-card.failed .number {
-              color: #e74c3c;
-          }
-
-          .summary-card .label {
-              color: #666;
-              font-size: 0.9rem;
-              text-transform: uppercase;
-              letter-spacing: 0.5px;
-          }
-
-          .test-results {
-              background: white;
-              border-radius: 8px;
-              box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-              overflow: hidden;
-          }
-
-          .test-class {
-              border-bottom: 1px solid #eee;
-          }
-
-          .test-class:last-child {
-              border-bottom: none;
-          }
-
-          .test-class.hidden {
-              display: none;
-          }
-
-          .test-class h2 {
-              background: #f8f9fa;
-              padding: 1rem 1.5rem;
-              margin: 0;
-              font-size: 1.25rem;
-              color: #2c3e50;
-              border-bottom: 1px solid #eee;
-          }
-
-          .test-method {
-              padding: 1.5rem;
-              border-bottom: 1px solid #f0f0f0;
-          }
-
-          .test-method:last-child {
-              border-bottom: none;
-          }
-
-          .test-method.hidden {
-              display: none;
-          }
-
-          .test-method-header {
-              display: flex;
-              align-items: center;
-              margin-bottom: 1rem;
-              cursor: pointer;
-              gap: 0.75rem;
-          }
-
-          .test-method h3 {
-              margin: 0;
-              font-size: 1.1rem;
-              color: #34495e;
-              flex: 1;
-          }
-
-          .method-status {
-              display: inline-flex;
-              align-items: center;
-              padding: 0.35rem 0.85rem;
-              border-radius: 4px;
-              font-size: 0.75rem;
-              font-weight: 600;
-              text-transform: uppercase;
-              letter-spacing: 0.5px;
-              white-space: nowrap;
-              min-width: 60px;
-              justify-content: center;
-          }
-
-          .method-status-passed {
-              background-color: #27ae60;
-              color: white;
-          }
-
-          .method-status-failed {
-              background-color: #e74c3c;
-              color: white;
-          }
-
-          .method-status-pending {
-              background-color: #f39c12;
-              color: white;
-          }
-
-          .expand-toggle {
-              background: none;
-              border: none;
-              cursor: pointer;
-              padding: 0.5rem;
-              border-radius: 4px;
-              transition: background-color 0.2s;
-          }
-
-          .expand-toggle:hover {
-              background-color: #f0f0f0;
-          }
-
-          .expand-icon {
-              font-size: 0.8rem;
-              color: #666;
-          }
-
-          .steps {
-              display: flex;
-              flex-direction: column;
-              gap: 1rem;
-              transition: max-height 0.3s ease-out;
-              overflow: hidden;
-          }
-
-          .steps.collapsed {
-              max-height: 0;
-              margin: 0;
-          }
-
-          .step {
-              border: 1px solid #ddd;
-              border-radius: 6px;
-              padding: 1rem;
-              background: #fafafa;
-          }
-
-          .step.passed {
-              border-color: #27ae60;
-              background: #f8fff8;
-          }
-
-          .step.failed {
-              border-color: #e74c3c;
-              background: #fff8f8;
-          }
-
-          .step-header {
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              margin-bottom: 0.5rem;
-          }
-
-          .step-name {
-              font-weight: 600;
-              color: #2c3e50;
-          }
-
-          .step-status {
-              padding: 0.25rem 0.5rem;
-              border-radius: 4px;
-              font-size: 0.8rem;
-              font-weight: 600;
-              text-transform: uppercase;
-          }
-
-          .step.passed .step-status {
-              background: #27ae60;
-              color: white;
-          }
-
-          .step.failed .step-status {
-              background: #e74c3c;
-              color: white;
-          }
-
-          .step-detail {
-              color: #666;
-              font-size: 0.9rem;
-              margin-bottom: 0.5rem;
-          }
-
-          .error-log {
-              margin-top: 1rem;
-              padding: 1rem;
-              background: #fff5f5;
-              border: 1px solid #fed7d7;
-              border-radius: 6px;
-          }
-
-          .error-log h4 {
-              color: #e53e3e;
-              margin: 0 0 0.5rem 0;
-              font-size: 0.9rem;
-          }
-
-          .error-log pre {
-              background: #2d3748;
-              color: #e2e8f0;
-              padding: 1rem;
-              border-radius: 4px;
-              overflow-x: auto;
-              font-size: 0.8rem;
-              line-height: 1.4;
-              margin: 0;
-              white-space: pre-wrap;
-              word-wrap: break-word;
-          }
-        CSS
+        File.read(File.join(__dir__, 'assets', 'dashboard.css'))
       end
 
       def generate_javascript
-        <<~JS
-          function toggleTestMethod(safeId) {
-              const stepsContainer = document.getElementById('steps-' + safeId);
-              const button = document.querySelector('[onclick*="' + safeId + '"]');
-
-              if (stepsContainer && button) {
-                  const icon = button.querySelector('.expand-icon');
-                  if (icon) {
-                      const isCollapsed = stepsContainer.classList.contains('collapsed');
-
-                      if (isCollapsed) {
-                          stepsContainer.classList.remove('collapsed');
-                          icon.textContent = '▼';
-                      } else {
-                          stepsContainer.classList.add('collapsed');
-                          icon.textContent = '▶';
-                      }
-                  }
-              }
-          }
-
-          // Search functionality
-          document.addEventListener('DOMContentLoaded', function() {
-              const searchInput = document.getElementById('searchInput');
-              if (!searchInput) return;
-
-              searchInput.addEventListener('input', function(e) {
-                  const query = e.target.value.toLowerCase().trim();
-                  const testMethods = document.querySelectorAll('.test-method');
-                  const testClasses = document.querySelectorAll('.test-class');
-
-                  // Determine if query is a status filter
-                  const isStatusFilter = query === 'pass' || query === 'fail' ||
-                                        query === 'passed' || query === 'failed' ||
-                                        query === 'pending';
-
-                  testMethods.forEach(function(method) {
-                      const name = method.getAttribute('data-name') || '';
-                      const status = method.getAttribute('data-status') || '';
-
-                      let shouldShow = false;
-
-                      if (!query) {
-                          // No query - show all
-                          shouldShow = true;
-                      } else if (isStatusFilter) {
-                          // Status filter - check status
-                          shouldShow = (query === 'pass' && status === 'passed') ||
-                                      (query === 'fail' && status === 'failed') ||
-                                      query === status;
-                      } else {
-                          // Name filter - check if name contains query
-                          shouldShow = name.includes(query);
-                      }
-
-                      if (shouldShow) {
-                          method.classList.remove('hidden');
-                      } else {
-                          method.classList.add('hidden');
-                      }
-                  });
-
-                  // Hide test classes if all methods are hidden
-                  testClasses.forEach(function(testClass) {
-                      const visibleMethods = testClass.querySelectorAll('.test-method:not(.hidden)');
-                      if (visibleMethods.length === 0) {
-                          testClass.classList.add('hidden');
-                      } else {
-                          testClass.classList.remove('hidden');
-                      }
-                  });
-              });
-          });
-        JS
+        File.read(File.join(__dir__, 'assets', 'dashboard.js'))
       end
     end
   end

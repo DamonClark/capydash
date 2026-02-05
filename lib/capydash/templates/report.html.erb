@@ -35,32 +35,32 @@
         <div class="test-results">
             <% processed_tests.each do |test_class| %>
                 <div class="test-class">
-                    <h2><%= test_class[:class_name] %></h2>
+                    <h2><%= h(test_class[:class_name]) %></h2>
 
                     <% test_class[:methods].each do |method| %>
-                        <div class="test-method" data-status="<%= method[:status] %>" data-name="<%= method[:name].downcase %>">
+                        <div class="test-method" data-status="<%= h(method[:status]) %>" data-name="<%= h(method[:name].downcase) %>">
                             <div class="test-method-header">
-                                <button class="expand-toggle" onclick="toggleTestMethod('<%= method[:safe_id] %>')">
-                                    <span class="expand-icon">▶</span>
+                                <button class="expand-toggle" onclick="toggleTestMethod('<%= h(method[:safe_id]) %>')">
+                                    <span class="expand-icon">&#9654;</span>
                                 </button>
-                                <h3><%= method[:name] %></h3>
+                                <h3><%= h(method[:name]) %></h3>
                                 <% if method[:status] %>
-                                    <span class="method-status method-status-<%= method[:status] %>"><%= method[:status] %></span>
+                                    <span class="method-status method-status-<%= h(method[:status]) %>"><%= h(method[:status]) %></span>
                                 <% end %>
                             </div>
-                            <div class="steps collapsed" id="steps-<%= method[:safe_id] %>">
+                            <div class="steps collapsed" id="steps-<%= h(method[:safe_id]) %>">
                                 <% method[:steps].each do |step| %>
-                                    <div class="step <%= step[:status] %>">
+                                    <div class="step <%= h(step[:status]) %>">
                                         <div class="step-header">
-                                            <span class="step-name"><%= step[:name] %></span>
-                                            <span class="step-status"><%= step[:status] %></span>
+                                            <span class="step-name"><%= h(step[:name]) %></span>
+                                            <span class="step-status"><%= h(step[:status]) %></span>
                                         </div>
-                                        <div class="step-detail"><%= step[:detail] %></div>
+                                        <div class="step-detail"><%= h(step[:detail]) %></div>
 
                                         <% if step[:error] %>
                                             <div class="error-log">
                                                 <h4>Error Details</h4>
-                                                <pre><%= step[:error] %></pre>
+                                                <pre><%= h(step[:error]) %></pre>
                                             </div>
                                         <% end %>
                                     </div>
