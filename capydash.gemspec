@@ -7,8 +7,8 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Damon Clark"]
   spec.email         = ["dclark312@gmail.com"]
 
-  spec.summary       = "Minimal static HTML report generator for RSpec system tests"
-  spec.description   = "CapyDash automatically generates clean, readable HTML test reports after your RSpec suite finishes. Zero configuration required."
+  spec.summary       = "Minimal static HTML report generator for RSpec and Minitest system tests"
+  spec.description   = "CapyDash automatically generates clean, readable HTML test reports after your RSpec or Minitest suite finishes. Zero configuration required."
   spec.homepage      = "https://github.com/damonclark/capydash"
   spec.license       = "MIT"
 
@@ -16,10 +16,7 @@ Gem::Specification.new do |spec|
   spec.files         = Dir["lib/**/*", "README.md", "LICENSE*", "*.gemspec"]
   spec.require_paths = ["lib"]
 
-  # Dependencies
-  spec.add_runtime_dependency "rspec", ">= 3.0"
-
-  # Development dependencies
+  # Development dependencies (no runtime deps — works with RSpec or Minitest)
   spec.add_development_dependency "rspec-rails", "~> 6.0"
   spec.add_development_dependency "rails", ">= 6.0"
 
