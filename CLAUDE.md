@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 CapyDash is a minimal static HTML report generator for RSpec and Minitest system tests. It auto-hooks into both frameworks, collects test results in memory, and generates a static HTML report at `capydash_report/`. Zero configuration required — just add the gem and run tests.
 
-**Current version:** 0.3.0 (defined in `lib/capydash/version.rb`)
+**Current version:** 0.3.1 (defined in `lib/capydash/version.rb`)
 
 ## Commands
 
