@@ -63,6 +63,13 @@
                                                 <pre><%= h(step[:error]) %></pre>
                                             </div>
                                         <% end %>
+
+                                        <% if step[:screenshot] %>
+                                            <div class="screenshot-container" onclick="openLightbox('<%= h(step[:screenshot]) %>')">
+                                                <h4>Failure Screenshot</h4>
+                                                <img src="<%= h(step[:screenshot]) %>" alt="Failure screenshot">
+                                            </div>
+                                        <% end %>
                                     </div>
                                 <% end %>
                             </div>
@@ -71,6 +78,9 @@
                 </div>
             <% end %>
         </div>
+    </div>
+    <div class="lightbox" id="screenshotLightbox" onclick="closeLightbox()">
+        <img id="lightboxImage" src="" alt="Screenshot full view">
     </div>
     <script src="assets/dashboard.js"></script>
 </body>

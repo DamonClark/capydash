@@ -2,6 +2,7 @@ require 'time'
 require 'fileutils'
 require 'erb'
 require 'cgi'
+require 'tmpdir'
 
 module CapyDash
   class ReportData
@@ -44,6 +45,11 @@ module CapyDash
           error_message = format_exception(execution_result.exception)
         end
 
+        screenshot_path = nil
+        if status == 'failed'
+          screenshot_path = capture_screenshot
+        end
+
         class_name = extract_class_name(example)
 
         @results << {
@@ -51,7 +57,8 @@ module CapyDash
           method_name: example.full_description,
           status: status,
           error: error_message,
-          location: example.metadata[:location]
+          location: example.metadata[:location],
+          screenshot_path: screenshot_path
         }
       end
 
@@ -66,6 +73,9 @@ module CapyDash
         assets_dir = File.join(report_dir, "assets")
         FileUtils.mkdir_p(assets_dir)
 
+        screenshots_dir = File.join(assets_dir, "screenshots")
+        FileUtils.mkdir_p(screenshots_dir)
+
         # Group results by class
         tests_by_class = @results.group_by { |r| r[:class_name] }
 
@@ -73,6 +83,18 @@ module CapyDash
         total_tests = @results.length
         passed_tests = @results.count { |r| r[:status] == 'passed' }
         failed_tests = @results.count { |r| r[:status] == 'failed' }
+
+        # Copy screenshots into report and build relative paths
+        screenshot_index = 0
+        @results.each do |result|
+          if result[:screenshot_path] && File.exist?(result[:screenshot_path])
+            screenshot_index += 1
+            dest_name = format("%03d.png", screenshot_index)
+            dest_path = File.join(screenshots_dir, dest_name)
+            FileUtils.cp(result[:screenshot_path], dest_path)
+            result[:screenshot_relative] = "assets/screenshots/#{dest_name}"
+          end
+        end
 
         # Process for template
         processed_tests = tests_by_class.map do |class_name, examples|
@@ -86,7 +108,8 @@ module CapyDash
                   name: 'test_execution',
                   detail: ex[:method_name],
                   status: ex[:status],
-                  error: ex[:error]
+                  error: ex[:error],
+                  screenshot: ex[:screenshot_relative]
                 }]
               }
             end
@@ -174,6 +197,19 @@ module CapyDash
           filename = File.basename(file_path, '.rb')
           filename.split('_').map(&:capitalize).join('')
         end
+      end
+
+      def capture_screenshot
+        return nil unless defined?(::Capybara) && defined?(::Capybara.current_session)
+
+        session = ::Capybara.current_session
+        return nil unless session.respond_to?(:save_screenshot)
+
+        tmpfile = File.join(Dir.tmpdir, "capydash_#{Time.now.to_i}_#{rand(10000)}.png")
+        session.save_screenshot(tmpfile)
+        tmpfile
+      rescue => _e
+        nil
       end
 
       def format_exception(exception)
