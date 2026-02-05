@@ -34,6 +34,7 @@ module CapyDash
 
       def record_example(example)
         return unless @started_at
+        return unless example.metadata[:type] == :system
 
         execution_result = example.execution_result
 

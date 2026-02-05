@@ -11,6 +11,7 @@ module CapyDash
 
       def record(result)
         return unless @started_at
+        return unless system_test?(result)
 
         status = if result.skipped?
                    'pending'
@@ -60,6 +61,12 @@ module CapyDash
       end
 
       private
+
+      def system_test?(result)
+        return false unless defined?(::ActionDispatch::SystemTestCase)
+        klass = Object.const_get(result.klass) rescue nil
+        klass && klass <= ::ActionDispatch::SystemTestCase
+      end
 
       def find_rails_screenshot(test_name)
         path = File.join(Dir.pwd, "tmp", "capybara", "failures_#{test_name}.png")
